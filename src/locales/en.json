@@ -1,0 +1,40 @@
+{
+  "nav": {
+    "appunti": "Notes",
+    "cisiamo": "CiSiamo",
+    "sostienici": "Support Us",
+    "contatti": "Contact",
+    "accedi": "Sign In",
+    "esci": "Sign Out",
+    "areaPersonale": "My Area",
+    "pannelloAdmin": "⚙ Admin Panel"
+  },
+  "home": {
+    "tagline": "Student Association — Conservatorio della Svizzera Italiana",
+    "hero": "The student portal",
+    "ctaAppunti": "Browse notes",
+    "ctaPodcast": "CiSiamo Podcast",
+    "appuntiTitle": "Notes & Materials",
+    "appuntiDesc": "Upload your study materials and share them with fellow students. Every file is DRM-protected.",
+    "appuntiCta": "Open marketplace →",
+    "podcastTitle": "CiSiamo Podcast",
+    "podcastDesc": "Interviews, live electronics, Erasmus stories and festival partners. A sonic archive of the Conservatory.",
+    "podcastCta": "Listen to episodes →",
+    "sostieniTitle": "Support Us",
+    "sostieniDesc": "Free donations and supporter memberships to fund events, productions and scholarships.",
+    "sostienicCta": "Make a donation →"
+  },
+  "appunti": {
+    "title": "Notes & Materials",
+    "subtitle": "Study materials shared by students. Every file is DRM-protected.",
+    "carica": "+ Upload material",
+    "gratis": "Free",
+    "visualizza": "View"
+  },
+  "common": {
+    "loading": "Loading…",
+    "error": "Error",
+    "save": "Save",
+    "cancel": "Cancel"
+  }
+}

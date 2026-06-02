@@ -1,0 +1,83 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ── Base tipografica Swiss Style ─────────────────────────────────────── */
+@layer base {
+  :root {
+    --color-bg:      #FFFFFF;
+    --color-text:    #0A0A0A;
+    --color-muted:   #6B6B6B;
+    --color-border:  #E0E0E0;
+    --color-surface: #F5F5F5;
+  }
+
+  html {
+    @apply scroll-smooth;
+  }
+
+  .dark body, body {
+    background-color: var(--color-bg);
+    color:            var(--color-text);
+  }
+
+  .dark {
+    --color-bg:      #121212;
+    --color-text:    #F0F0F0;
+    --color-muted:   #888888;
+    --color-border:  #2A2A2A;
+    --color-surface: #1A1A1A;
+  }
+
+  body {
+    background-color: var(--color-bg);
+    color:            var(--color-text);
+    font-family:      Inter, 'DM Sans', 'Helvetica Neue', Arial, sans-serif;
+    font-size:        16px;
+    line-height:      1.6;
+    -webkit-font-smoothing:  antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  /* Tipografia editoriale */
+  h1, h2, h3, h4, h5, h6 {
+    font-weight: 700;
+    line-height: 1.15;
+    letter-spacing: -0.02em;
+  }
+
+  /* Selezione testo con colore brand */
+  ::selection {
+    background: #00CFCF;
+    color: #0A0A0A;
+  }
+
+  /* Rimuovi outline di default, rimpiazza con brand */
+  :focus-visible {
+    outline: 2px solid #FF4D4D;
+    outline-offset: 2px;
+  }
+}
+
+/* ── Utility custom ────────────────────────────────────────────────────── */
+@layer utilities {
+  /* Testo con gradiente brand */
+  .text-brand {
+    background: linear-gradient(90deg, #FF4D4D 0%, #00CFCF 50%, #AAFF00 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  /* Bordo con gradiente brand */
+  .border-brand {
+    border-image: linear-gradient(90deg, #FF4D4D, #00CFCF, #AAFF00) 1;
+  }
+
+  /* Griglia editoriale asimmetrica */
+  .grid-editorial {
+    display: grid;
+    grid-template-columns: 1fr 2fr;
+    gap: 1px;
+  }
+}

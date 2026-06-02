@@ -1,0 +1,40 @@
+{
+  "nav": {
+    "appunti": "Appunti",
+    "cisiamo": "CiSiamo",
+    "sostienici": "Sostienici",
+    "contatti": "Contatti",
+    "accedi": "Accedi",
+    "esci": "Esci",
+    "areaPersonale": "Area personale",
+    "pannelloAdmin": "⚙ Pannello Admin"
+  },
+  "home": {
+    "tagline": "Associazione Studenti — Conservatorio della Svizzera Italiana",
+    "hero": "Il portale degli studenti",
+    "ctaAppunti": "Sfoglia appunti",
+    "ctaPodcast": "CiSiamo Podcast",
+    "appuntiTitle": "Appunti & Dispense",
+    "appuntiDesc": "Carica i tuoi materiali didattici e mettili a disposizione dei colleghi. Ogni dispensa è protetta da DRM.",
+    "appuntiCta": "Accedi al marketplace →",
+    "podcastTitle": "CiSiamo Podcast",
+    "podcastDesc": "Interviste, live electronics, storie Erasmus e festival partner. Un archivio sonoro del Conservatorio.",
+    "podcastCta": "Ascolta gli episodi →",
+    "sostieniTitle": "Sostienici",
+    "sostieniDesc": "Donazioni libere e quote sostenitore per finanziare eventi, produzioni e borse di studio.",
+    "sostienicCta": "Fai una donazione →"
+  },
+  "appunti": {
+    "title": "Appunti & Dispense",
+    "subtitle": "Materiale didattico condiviso dagli studenti. Ogni file è protetto da DRM.",
+    "carica": "+ Carica materiale",
+    "gratis": "Gratis",
+    "visualizza": "Visualizza"
+  },
+  "common": {
+    "loading": "Caricamento…",
+    "error": "Errore",
+    "save": "Salva",
+    "cancel": "Annulla"
+  }
+}

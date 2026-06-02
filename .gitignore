@@ -1,0 +1,66 @@
+# ==========================================
+# 1. Dipendenze e Package Manager
+# ==========================================
+node_modules/
+.pnpm-store/
+.yarn/
+package-lock.json
+pnpm-lock.yaml
+yarn.lock
+
+# ==========================================
+# 2. Build di Next.js e Output di Produzione
+# ==========================================
+.next/
+out/
+build/
+dist/
+
+# ==========================================
+# 3. Dati Locali dei Container (Docker e MinIO)
+# ==========================================
+# Esclude la cartella sul tuo PC dove MinIO salverà i file degli studenti
+minio_data/
+minio_backup_data/
+
+# Se in futuro dovessi mappare anche i dati grezzi di PostgreSQL in locale
+pg_data/
+
+# ==========================================
+# 4. Variabili d'Ambiente e Segreti (CRITICO)
+# ==========================================
+.env
+.env.local
+.env.development
+.env.production
+.env.development.local
+.env.production.local
+
+# ==========================================
+# 5. Log e Diagnostica
+# ==========================================
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+.eslintcache
+
+# ==========================================
+# 6. File di Sistema (OS Specific)
+# ==========================================
+.DS_Store
+.DS_Store?
+._*
+Thumbs.db
+ehthumbs.db
+
+# ==========================================
+# 7. IDE e Editor (VS Code / JetBrains)
+# ==========================================
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.swp
