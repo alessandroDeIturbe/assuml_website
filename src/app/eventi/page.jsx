@@ -1,21 +1,20 @@
+import { prisma } from '@/lib/prisma'
+
 export const metadata = { title: 'Eventi — ASSUML' }
+export const dynamic  = 'force-dynamic'
 
-const EVENTI = [
-  { data: '2026-09-15', tipo: 'Concerto',   titolo: 'Serata d\'apertura AA 2026/27',         luogo: 'Sala Kursaal, Lugano' },
-  { data: '2026-10-08', tipo: 'Masterclass', titolo: 'Masterclass di Composizione Elettroacustica', luogo: 'Conservatorio CSI' },
-  { data: '2026-10-23', tipo: 'Festival',   titolo: 'Festival Ramificazioni 2026',            luogo: 'Vari spazi, Lugano' },
-  { data: '2026-11-14', tipo: 'Assemblea',  titolo: 'Assemblea Generale ASSUML',              luogo: 'Conservatorio CSI' },
-  { data: '2026-12-19', tipo: 'Concerto',   titolo: 'Concerto di Natale degli Studenti',      luogo: 'LAC Lugano' },
-]
-
-const TIPO_COLOR = {
-  'Concerto':   '#FF4D4D',
-  'Masterclass':'#00CFCF',
-  'Festival':   '#A78BFA',
-  'Assemblea':  '#D4AF37',
+async function getEvents() {
+  try {
+    return await prisma.event.findMany({
+      where:   { active: true },
+      orderBy: { date: 'asc' },
+    })
+  } catch { return [] }
 }
 
-export default function EventiPage() {
+export default async function EventiPage() {
+  const eventi = await getEvents()
+
   return (
     <div className="max-w-6xl mx-auto px-6">
 
@@ -30,35 +29,51 @@ export default function EventiPage() {
       </section>
 
       <section className="py-16">
-        <div className="divide-y divide-neutral-200 dark:divide-neutral-800">
-          {EVENTI.map((ev) => {
-            const d = new Date(ev.data)
-            const giorno = d.toLocaleDateString('it-IT', { day: '2-digit', month: 'short' }).toUpperCase()
-            const anno   = d.getFullYear()
-            return (
-              <div key={ev.titolo} className="py-8 grid grid-cols-[80px_1fr] gap-8 items-start group">
-                <div className="text-center">
-                  <p className="font-black text-2xl leading-none text-neutral-900 dark:text-white">{giorno.split(' ')[0]}</p>
-                  <p className="text-xs font-mono text-neutral-400 mt-0.5">{giorno.split(' ')[1]} {anno}</p>
-                </div>
-                <div className="space-y-1.5">
-                  <div className="flex items-center gap-2">
-                    <span className="text-[10px] font-mono uppercase tracking-widest px-2 py-0.5 border"
-                      style={{ color: TIPO_COLOR[ev.tipo] ?? '#888', borderColor: (TIPO_COLOR[ev.tipo] ?? '#888') + '44' }}>
+        {eventi.length === 0 ? (
+          <div className="py-24 text-center">
+            <p className="text-neutral-400 dark:text-neutral-600 font-mono text-sm">
+              Nessun evento in programma al momento.
+            </p>
+            <p className="text-neutral-300 dark:text-neutral-700 font-mono text-xs mt-2">
+              Gli eventi vengono aggiunti dall'admin tramite il pannello di controllo.
+            </p>
+          </div>
+        ) : (
+          <div className="divide-y divide-neutral-200 dark:divide-neutral-800">
+            {eventi.map((ev) => {
+              const d      = new Date(ev.date)
+              const giorno = d.toLocaleDateString('it-IT', { day: '2-digit', month: 'short' }).toUpperCase()
+              const anno   = d.getFullYear()
+              return (
+                <div key={ev.id} className="py-8 grid grid-cols-[80px_1fr] gap-8 items-start group">
+                  <div className="text-center">
+                    <p className="font-black text-2xl leading-none text-neutral-900 dark:text-white">
+                      {giorno.split(' ')[0]}
+                    </p>
+                    <p className="text-xs font-mono text-neutral-400 mt-0.5">
+                      {giorno.split(' ')[1]} {anno}
+                    </p>
+                  </div>
+                  <div className="space-y-1.5">
+                    <span className="text-[10px] font-mono uppercase tracking-widest px-2 py-0.5 border border-[#FF4D4D]/40 text-[#FF4D4D]">
                       {ev.tipo}
                     </span>
+                    <h2 className="font-semibold text-lg text-neutral-900 dark:text-white leading-tight">
+                      {ev.title}
+                    </h2>
+                    {ev.luogo && (
+                      <p className="text-sm text-neutral-400 font-mono">{ev.luogo}</p>
+                    )}
+                    {ev.description && (
+                      <p className="text-sm text-neutral-500 dark:text-neutral-400 mt-2">{ev.description}</p>
+                    )}
                   </div>
-                  <h2 className="font-semibold text-lg text-neutral-900 dark:text-white leading-tight group-hover:text-[#FF4D4D] transition">
-                    {ev.titolo}
-                  </h2>
-                  <p className="text-sm text-neutral-400 font-mono">{ev.luogo}</p>
                 </div>
-              </div>
-            )
-          })}
-        </div>
+              )
+            })}
+          </div>
+        )}
       </section>
-
     </div>
   )
 }

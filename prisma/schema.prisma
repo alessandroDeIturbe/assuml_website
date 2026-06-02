@@ -17,6 +17,7 @@ model User {
   image         String?
   role          Role       @default(STUDENT)
   password      String?    // bcrypt hash (Credentials provider)
+  paymentInfo   String?    // IBAN / Twint del venditore (visibile ai compratori al momento dell'acquisto)
   createdAt     DateTime   @default(now())
 
   notes         Note[]
@@ -90,16 +91,24 @@ enum NoteStatus {
 }
 
 model Purchase {
-  id          String   @id @default(cuid())
-  userId      String
-  noteId      String
-  stripeId    String   @unique
-  amountPaid  Float
-  currency    String   @default("CHF")
-  purchasedAt DateTime @default(now())
-  user        User     @relation(fields: [userId], references: [id])
-  note        Note     @relation(fields: [noteId], references: [id])
+  id             String         @id @default(cuid())
+  userId         String
+  noteId         String
+  stripeId       String         @unique
+  amountPaid     Float
+  currency       String         @default("CHF")
+  purchaseStatus PurchaseStatus @default(ACTIVE)
+  receiptKey     String?        // MinIO key della ricevuta di pagamento P2P
+  purchasedAt    DateTime       @default(now())
+  user           User           @relation(fields: [userId], references: [id])
+  note           Note           @relation(fields: [noteId], references: [id])
   @@unique([userId, noteId])
+}
+
+enum PurchaseStatus {
+  PENDING_RECEIPT   // pagamento P2P: in attesa di ricevuta
+  PENDING_APPROVAL  // ricevuta caricata, in attesa di conferma admin
+  ACTIVE            // acquisto verificato, file accessibile
 }
 
 // ── Donazioni ─────────────────────────────────────────────────────────────
@@ -118,6 +127,28 @@ enum DonationStatus {
   PENDING
   COMPLETED
   FAILED
+}
+
+// ── Eventi ────────────────────────────────────────────────────────────────
+model Event {
+  id          String   @id @default(cuid())
+  title       String
+  tipo        String   @default("Evento")
+  luogo       String?
+  date        DateTime
+  description String?  @db.Text
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now())
+}
+
+// ── Convenzioni ───────────────────────────────────────────────────────────
+model Convention {
+  id          String   @id @default(cuid())
+  title       String
+  subtitle    String?
+  imageKey    String?  // MinIO key per la foto
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now())
 }
 
 // ── Bacheca Istituzionale ─────────────────────────────────────────────────

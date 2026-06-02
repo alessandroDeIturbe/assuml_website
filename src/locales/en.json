@@ -31,10 +31,18 @@
     "gratis": "Free",
     "visualizza": "View"
   },
+  "notes": {
+    "buyBtn":   "Buy",
+    "freeBtn":  "Get for free",
+    "viewBtn":  "View",
+    "deleteBtn":"Delete",
+    "purchased":"Already purchased",
+    "simNote":  "[DEV] Simulated purchase"
+  },
   "common": {
-    "loading": "Loading…",
-    "error": "Error",
-    "save": "Save",
-    "cancel": "Cancel"
+    "loading":  "Loading…",
+    "error":    "Error",
+    "save":     "Save",
+    "cancel":   "Cancel"
   }
 }

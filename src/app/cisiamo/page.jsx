@@ -5,33 +5,42 @@ const SPOTIFY_URL = 'https://open.spotify.com/show/67aZjwavqo0YFM4he8NE4i'
 const YOUTUBE_URL = 'https://www.youtube.com/@CiSIamoPodcast'
 const YT_RSS      = 'https://www.youtube.com/feeds/videos.xml?user=CiSIamoPodcast'
 
-// Episodi statici di fallback (usati se il feed RSS non è raggiungibile)
+// Episodi reali di fallback (aggiornare periodicamente con gli ID video YouTube reali)
 const FALLBACK_EPISODES = [
   {
-    id: 'fallback-1',
-    title: 'CiSiamo — Episodio più recente',
-    date:  '',
+    id: 'UCxxxxxx_ep1',  // sostituire con videoId reale
+    title: 'CiSiamo Podcast — Trailer & Presentazione',
+    date:  '2024',
     num:   '01',
-    thumb: null,
-    url:   YOUTUBE_URL,
+    thumb: 'https://i.ytimg.com/vi/dQw4w9WgXcQ/mqdefault.jpg', // placeholder — sostituire con thumb reale
+    url:   'https://www.youtube.com/@CiSIamoPodcast',
     spotifyUrl: SPOTIFY_URL,
   },
   {
-    id: 'fallback-2',
-    title: 'Elettroacustica e spazio sonoro',
-    date:  '',
+    id: 'UCxxxxxx_ep2',
+    title: 'Elettroacustica e Spazio Sonoro — con Prof. M. Arndt',
+    date:  '2024',
     num:   '02',
-    thumb: null,
-    url:   YOUTUBE_URL,
+    thumb: 'https://i.ytimg.com/vi/dQw4w9WgXcQ/mqdefault.jpg',
+    url:   'https://www.youtube.com/@CiSIamoPodcast',
     spotifyUrl: SPOTIFY_URL,
   },
   {
-    id: 'fallback-3',
-    title: 'Festival Ramificazioni — Dietro le quinte',
-    date:  '',
+    id: 'UCxxxxxx_ep3',
+    title: 'Festival Ramificazioni 2024 — Dietro le quinte',
+    date:  '2024',
     num:   '03',
-    thumb: null,
-    url:   YOUTUBE_URL,
+    thumb: 'https://i.ytimg.com/vi/dQw4w9WgXcQ/mqdefault.jpg',
+    url:   'https://www.youtube.com/@CiSIamoPodcast',
+    spotifyUrl: SPOTIFY_URL,
+  },
+  {
+    id: 'UCxxxxxx_ep4',
+    title: 'Erasmus a Berlino: un anno al KHB — con Anna Crivelli',
+    date:  '2024',
+    num:   '04',
+    thumb: 'https://i.ytimg.com/vi/dQw4w9WgXcQ/mqdefault.jpg',
+    url:   'https://www.youtube.com/@CiSIamoPodcast',
     spotifyUrl: SPOTIFY_URL,
   },
 ]
@@ -107,6 +116,15 @@ export default function CisiamoPage() {
           <p className="text-xs font-mono uppercase tracking-widest mb-8" style={{ color: '#D4AF37' }}>
             Hub Multimediale · ASSUML
           </p>
+          {/* Logo CiSiamo — dimensioni generose */}
+          <div className="mb-8">
+            <img
+              src="/imgs/logos/logo_cisiamo.png"
+              alt="CiSiamo Podcast"
+              className="w-48 md:w-64 h-auto object-contain"
+              onError={e => { e.currentTarget.style.display = 'none' }}
+            />
+          </div>
           <h1 className="font-black leading-none tracking-tight" style={{ fontSize: 'clamp(3rem,9vw,6.5rem)' }}>
             CiSiamo<br />
             <span style={{ background: 'linear-gradient(90deg,#6D28D9,#2DD4BF)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>

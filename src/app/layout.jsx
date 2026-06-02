@@ -1,5 +1,6 @@
 import './globals.css'
-import Navbar from '@/components/Navbar'
+import Navbar      from '@/components/Navbar'
+import Footer      from '@/components/Footer'
 import ThemeProvider from '@/components/ThemeProvider'
 
 export const metadata = {
@@ -24,6 +25,7 @@ export default function RootLayout({ children }) {
           <main className="pt-14 min-h-screen">
             {children}
           </main>
+          <Footer />
         </ThemeProvider>
       </body>
     </html>

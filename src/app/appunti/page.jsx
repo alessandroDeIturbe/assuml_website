@@ -1,6 +1,6 @@
-import Link from 'next/link'
-import { prisma } from '@/lib/prisma'
-import { auth }   from '@/lib/auth'
+import Link          from 'next/link'
+import { prisma }    from '@/lib/prisma'
+import { auth }      from '@/lib/auth'
 import AppuntiClient from './AppuntiClient'
 
 export const metadata = { title: 'Appunti & Dispense — ASSUML' }
@@ -15,21 +15,49 @@ async function getNotes() {
       orderBy: { createdAt: 'desc' },
       select: {
         id: true, title: true, price: true, currency: true, description: true,
-        author: { select: { name: true, email: true } },
+        author: { select: { name: true, email: true, paymentInfo: true } },
       },
     })
-  } catch { return [] }
+  } catch (e) {
+    console.error('[appunti] getNotes:', e?.message)
+    return []
+  }
+}
+
+async function getPurchasedIds(userId) {
+  if (!userId) return []
+  try {
+    // Usa una raw query minimale per evitare crash se la migration non è ancora applicata
+    const rows = await prisma.$queryRaw`
+      SELECT "noteId" FROM "Purchase"
+      WHERE "userId" = ${userId}
+        AND ("purchaseStatus" IS NULL OR "purchaseStatus" = 'ACTIVE')
+    `
+    return rows.map(r => r.noteId)
+  } catch {
+    // Fallback senza purchaseStatus (pre-migration)
+    try {
+      const rows = await prisma.purchase.findMany({
+        where:  { userId },
+        select: { noteId: true },
+      })
+      return rows.map(r => r.noteId)
+    } catch { return [] }
+  }
 }
 
 export default async function AppuntiPage() {
   const [notes, session] = await Promise.all([getNotes(), auth()])
-  const isAdmin = session?.user?.isAdmin === true
-               || session?.user?.email   === ADMIN_EMAIL
-               || session?.user?.role    === 'ADMIN'
+  const userId  = session?.user?.id ?? null
+  const isAdmin = !!(
+    session?.user?.isAdmin ||
+    session?.user?.email === ADMIN_EMAIL ||
+    session?.user?.role  === 'ADMIN'
+  )
+  const purchasedIds = await getPurchasedIds(userId)
 
   return (
     <div className="max-w-6xl mx-auto px-6">
-
       <section className="py-20 border-b border-neutral-200 dark:border-neutral-700">
         <span className="inline-block w-2 h-2 rounded-full bg-[#FF4D4D] mb-6" />
         <div className="flex items-end justify-between gap-8 flex-wrap">
@@ -47,9 +75,8 @@ export default async function AppuntiPage() {
           Materiale didattico condiviso dagli studenti. DRM integrato: visualizzazione solo in-app, nessun download.
         </p>
       </section>
-
       <section className="py-16">
-        <AppuntiClient notes={notes} isAdmin={isAdmin} />
+        <AppuntiClient notes={notes} isAdmin={isAdmin} purchasedIds={purchasedIds} />
       </section>
     </div>
   )

@@ -31,6 +31,31 @@ export const authOptions = {
         return ok ? user : null
       },
     }),
+
+    // ── Account di test (solo development) ─────────────────────────────
+    ...(process.env.NODE_ENV === 'development' ? [
+      CredentialsProvider({
+        id:   'dev-test',
+        name: 'Test Account (Dev)',
+        credentials: {
+          email: { label: 'Email test', type: 'email', placeholder: 'test@conservatorio.ch' },
+        },
+        async authorize({ email }) {
+          const addr = email?.trim() || 'test@conservatorio.ch'
+          // Crea/recupera utente di test nel DB
+          const user = await prisma.user.upsert({
+            where:  { email: addr },
+            update: {},
+            create: {
+              email: addr,
+              name:  'Test User',
+              role:  addr === ADMIN_EMAIL ? 'ADMIN' : 'STUDENT',
+            },
+          })
+          return user
+        },
+      }),
+    ] : []),
   ],
   callbacks: {
     // Blocco istituzionale Google: solo domini autorizzati

@@ -12,14 +12,30 @@ export default async function AdminPage() {
   const session = await auth()
   if (!session?.user || session.user.email !== ADMIN_EMAIL) redirect('/')
 
-  const notes = await prisma.note.findMany({
-    where:   { status: 'PENDING_APPROVAL' },
-    orderBy: { createdAt: 'desc' },
-    select: {
-      id: true, title: true, status: true, price: true, currency: true, createdAt: true,
-      author: { select: { name: true, email: true } },
-    },
-  })
+  const [notes, announcements, pendingPurchases] = await Promise.all([
+    prisma.note.findMany({
+      where:   { status: 'PENDING_APPROVAL' },
+      orderBy: { createdAt: 'desc' },
+      select: {
+        id: true, title: true, status: true, price: true, currency: true, createdAt: true,
+        author: { select: { name: true, email: true } },
+      },
+    }),
+    prisma.announcement.findMany({
+      where:   { active: true },
+      orderBy: { createdAt: 'desc' },
+      select:  { id: true, title: true, body: true, createdAt: true },
+    }),
+    prisma.purchase.findMany({
+      where:   { purchaseStatus: 'PENDING_APPROVAL' },
+      orderBy: { purchasedAt: 'desc' },
+      select: {
+        id: true, amountPaid: true, currency: true, receiptKey: true, purchasedAt: true,
+        user: { select: { name: true, email: true } },
+        note: { select: { title: true } },
+      },
+    }),
+  ])
 
   return (
     <div className="max-w-5xl mx-auto px-6">
@@ -33,7 +49,7 @@ export default async function AdminPage() {
         </p>
       </section>
       <div className="py-12">
-        <AdminClient initialNotes={notes} />
+        <AdminClient initialNotes={notes} initialAnnouncements={announcements} initialPurchases={pendingPurchases} />
       </div>
     </div>
   )
