@@ -1,4 +1,5 @@
-import { prisma } from '@/lib/prisma'
+import { prisma }       from '@/lib/prisma'
+import AdminEditLink  from '@/components/AdminEditLink'
 
 export const metadata = { title: 'Eventi — ASSUML' }
 export const dynamic  = 'force-dynamic'
@@ -21,7 +22,7 @@ export default async function EventiPage() {
       <section className="py-20 border-b border-neutral-200 dark:border-neutral-800">
         <span className="inline-block w-2 h-2 rounded-full bg-[#FF4D4D] mb-6" />
         <h1 className="font-black text-6xl tracking-tight text-neutral-900 dark:text-white leading-none">
-          Eventi
+          Eventi <AdminEditLink href="/admin" title="Gestisci eventi" />
         </h1>
         <p className="mt-6 text-neutral-500 dark:text-neutral-400 text-base max-w-xl">
           Concerti, masterclass, assemblee e festival organizzati da ASSUML e dal Conservatorio della Svizzera Italiana.

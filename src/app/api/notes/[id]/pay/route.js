@@ -30,7 +30,7 @@ export async function POST(req, { params }) {
   const session = await auth()
   if (!session?.user) return NextResponse.json({ error: 'Non autenticato' }, { status: 401 })
 
-  const { id: noteId } = params
+  const { id: noteId } = await params
   const userId = session.user.id
 
   // Carica nota + dati venditore

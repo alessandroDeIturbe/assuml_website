@@ -11,8 +11,12 @@ const ALLOWED_DOMAINS  = ['conservatorio.ch', 'assuml.ch']
 const ADMIN_EMAIL      = 'studenti@conservatorio.ch'
 
 export const authOptions = {
-  adapter: PrismaAdapter(prisma),
-  session: { strategy: 'jwt' },
+  adapter:   PrismaAdapter(prisma),
+  session:   { strategy: 'jwt' },
+  // BUG-7 FIX: trustHost richiesto quando Next.js usa porta diversa da NEXTAUTH_URL
+  // (es. :3001 invece di :3000 se la porta è occupata). Senza questo il cookie PKCE
+  // non viene trovato al callback Google → InvalidCheck: pkceCodeVerifier
+  trustHost: true,
   providers: [
     GoogleProvider({
       clientId:     process.env.GOOGLE_CLIENT_ID,
@@ -68,10 +72,17 @@ export const authOptions = {
       return true
     },
     async jwt({ token, user, profile }) {
-      if (user)    { token.id = user.id; token.role = user.role }
+      if (user) { token.id = user.id; token.role = user.role }
       if (profile) { token.isAdmin = profile.email === ADMIN_EMAIL }
-      // Credentials login: controlla email direttamente
       if (token.email === ADMIN_EMAIL) token.isAdmin = true
+      // Safety: se token.id non è un CUID DB (es. sub Google) → risolvi dal DB per email
+      if (!token.id && token.email) {
+        const dbUser = await prisma.user.findUnique({
+          where:  { email: token.email },
+          select: { id: true, role: true },
+        })
+        if (dbUser) { token.id = dbUser.id; token.role = dbUser.role }
+      }
       return token
     },
     async session({ session, token }) {

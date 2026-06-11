@@ -32,8 +32,8 @@ const COLS = [
 
 export default function Footer() {
   return (
-    <footer className="border-t border-neutral-200 dark:border-neutral-800 bg-white dark:bg-[#121212] mt-24">
-      <div className="max-w-6xl mx-auto px-6 py-16">
+    <footer className="border-t border-neutral-200 dark:border-neutral-800 bg-white dark:bg-[#121212]">
+      <div className="max-w-6xl mx-auto px-6 py-10">
         <div className="grid sm:grid-cols-2 md:grid-cols-4 gap-10">
 
           {/* Brand */}
@@ -77,7 +77,7 @@ export default function Footer() {
         </div>
 
         {/* Bottom bar */}
-        <div className="mt-12 pt-6 border-t border-neutral-200 dark:border-neutral-800 flex flex-wrap items-center justify-between gap-4">
+        <div className="mt-8 pt-4 border-t border-neutral-200 dark:border-neutral-800 flex flex-wrap items-center justify-between gap-4">
           <p className="text-xs font-mono text-neutral-400">
             © {new Date().getFullYear()} ASSUML — Tutti i diritti riservati
           </p>

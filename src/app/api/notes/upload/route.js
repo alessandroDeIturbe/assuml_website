@@ -26,9 +26,17 @@ export async function POST(req) {
   if (!ALLOWED_TYPES.has(contentType)) return NextResponse.json({ error: 'Tipo file non supportato' }, { status: 422 })
   if (typeof price !== 'number' || price < 0) return NextResponse.json({ error: 'Prezzo non valido' }, { status: 422 })
 
-  // 3. Object key univoco
+  // 3. Risolvi CUID DB dalla email (BUG-13: session.user.id può non matchare User.id con JWT)
+  const dbUser = await prisma.user.findUnique({
+    where:  { email: session.user.email },
+    select: { id: true },
+  })
+  if (!dbUser) return NextResponse.json({ error: 'Utente non trovato nel DB — rieffettua il login' }, { status: 401 })
+  const dbUserId = dbUser.id
+
+  // Object key univoco
   const ext     = fileName.split('.').pop().toLowerCase().replace(/[^a-z0-9]/g, '')
-  const fileKey = `notes/${session.user.id}/${nanoid(16)}.${ext}`
+  const fileKey = `notes/${dbUserId}/${nanoid(16)}.${ext}`
 
   // 4. Presigned PUT
   let uploadUrl
@@ -52,7 +60,7 @@ export async function POST(req) {
       price:       parseFloat(price.toFixed(2)),
       currency,
       status:      'PENDING_APPROVAL',
-      authorId:    session.user.id,
+      authorId:    dbUserId,
     },
     select: { id: true, status: true },
   })

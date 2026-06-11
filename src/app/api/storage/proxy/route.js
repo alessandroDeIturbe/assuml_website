@@ -1,8 +1,8 @@
 // src/app/api/storage/proxy/route.js
 // PUT — proxy server-side verso MinIO per upload da browser.
-// Evita problemi CORS in sviluppo senza modificare config MinIO.
-// Il client chiama: PUT /api/storage/proxy?key=notes/xxx.pdf&type=application%2Fpdf
-// con il file nel body.
+// Passa req.body come ReadableStream al SDK S3 — evita di bufferizzare
+// file grandi (> 4 MB) in memoria e previene "Unexpected end of JSON input"
+// causato dall'OOM / timeout del vecchio approccio arrayBuffer().
 
 import { NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
@@ -23,7 +23,9 @@ function getS3() {
       accessKeyId:     process.env.MINIO_ACCESS_KEY ?? 'assuml_admin',
       secretAccessKey: process.env.MINIO_SECRET_KEY ?? 'supersecret',
     },
-    forcePathStyle: true,
+    forcePathStyle:          true,
+    // Aumenta il timeout per file grandi (default 0 = nessun timeout SDK)
+    requestHandler: undefined,
   })
 }
 
@@ -39,24 +41,31 @@ export async function PUT(req) {
 
   if (!key) return NextResponse.json({ error: 'key mancante' }, { status: 400 })
 
-  // Sicurezza: l'utente può caricare solo nella sua cartella
   const ownedPrefix = `notes/${session.user.id}/`
-  if (!key.startsWith(ownedPrefix)) {
+  if (!key.startsWith(ownedPrefix))
     return NextResponse.json({ error: 'Percorso non autorizzato' }, { status: 403 })
-  }
-
-  const body = await req.arrayBuffer()
 
   try {
+    // BUG-8 FIX: AWS SDK v3 non può calcolare l'hash SHA-256 di una Web ReadableStream
+    // ("Unable to calculate hash for flowing readable stream") perché richiederebbe di
+    // consumare lo stream prima di inviarlo. Soluzione: bufferizzare con arrayBuffer().
+    // Per PDF notes (tipicamente < 50 MB) il consumo di memoria è accettabile.
+    const buf = Buffer.from(await req.arrayBuffer())
+
     await getS3().send(new PutObjectCommand({
-      Bucket:      BUCKET(),
-      Key:         key,
-      Body:        Buffer.from(body),
-      ContentType: contentType,
+      Bucket:        BUCKET(),
+      Key:           key,
+      Body:          buf,
+      ContentType:   contentType,
+      ContentLength: buf.byteLength,   // esplicito: evita chunked transfer su MinIO
     }))
-    return NextResponse.json({ ok: true })
+
+    return NextResponse.json({ ok: true }, { status: 200 })
   } catch (e) {
-    console.error('[proxy upload]', e?.message)
-    return NextResponse.json({ error: e?.message ?? 'Upload fallito' }, { status: 502 })
+    console.error('[proxy upload]', e?.Code ?? e?.name, e?.message, e?.$metadata)
+    return NextResponse.json(
+      { error: e?.message ?? 'Upload fallito' },
+      { status: 502 }
+    )
   }
 }

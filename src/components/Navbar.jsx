@@ -6,28 +6,30 @@ import { useTheme }      from 'next-themes'
 import { useSession, signOut } from 'next-auth/react'
 import { useLang }       from '@/contexts/LanguageContext'
 
-// ── Struttura menu ────────────────────────────────────────────────────────
-const NAV_STRUCTURE = [
-  { label: 'Chi siamo',  href: '/associazione' },
-  { label: 'Eventi',     href: '/eventi' },
-  {
-    label: 'Progetti',
-    dropdown: [
-      { href: '/cisiamo',    label: 'CiSiamo Podcast', accent: '#00CFCF' },
-      { href: '/ramificazioni', label: 'Ramificazioni', accent: '#FF4D4D' },
-    ],
-  },
-  { label: 'Shop',       href: '/shop' },
-  {
-    label: 'Risorse',
-    dropdown: [
-      { href: '/appunti',    label: 'Appunti',              accent: '#FF4D4D' },
-      { href: '/convenzioni',label: 'Convenzioni',          accent: '#D4AF37' },
-      { href: '/guida',      label: 'Guida dello studente', accent: '#A78BFA' },
-    ],
-  },
-  { label: 'Sostienici', href: '/sostienici' },
-]
+// ── Struttura menu (generata con t() per supporto i18n) ──────────────────
+function buildNav(t) {
+  return [
+    { label: t('nav.chiSiamo'),  href: '/associazione' },
+    { label: t('nav.eventi'),    href: '/eventi' },
+    {
+      label: t('nav.progetti'),
+      dropdown: [
+        { href: '/cisiamo',       label: t('nav.cisiamoPodcast'), accent: '#00CFCF' },
+        { href: '/ramificazioni', label: t('nav.ramificazioni'),  accent: '#FF4D4D' },
+      ],
+    },
+    { label: t('nav.shop'),      href: '/shop' },
+    {
+      label: t('nav.risorse'),
+      dropdown: [
+        { href: '/appunti',    label: t('nav.appunti'),    accent: '#FF4D4D' },
+        { href: '/convenzioni',label: t('nav.convenzioni'),accent: '#D4AF37' },
+        { href: '/guida',      label: t('nav.guida'),      accent: '#A78BFA' },
+      ],
+    },
+    { label: t('nav.sostienici'), href: '/sostienici' },
+  ]
+}
 
 function initials(name, email) {
   if (name) return name.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase()
@@ -65,6 +67,7 @@ export default function Navbar() {
   const [dropOpen,    setDropOpen]    = useState(false)   // user avatar dropdown
   const [openMenu,    setOpenMenu]    = useState(null)    // quale dropdown nav è aperto (label)
   const [mobileExpanded, setMobileExpanded] = useState({}) // dropdown aperti nel mobile
+  const [mounted,     setMounted]     = useState(false)   // BUG-6: evita hydration mismatch next-themes
 
   const dropRef = useRef(null)
   const navRef  = useRef(null)
@@ -72,6 +75,9 @@ export default function Navbar() {
   const { resolvedTheme, setTheme } = useTheme()
   const { data: session }           = useSession()
   const { lang, setLang, t }        = useLang()
+
+  // BUG-6 FIX: next-themes resolvedTheme è undefined su server → hydration mismatch
+  useEffect(() => { setMounted(true) }, [])
 
   // Chiudi al click fuori
   useEffect(() => {
@@ -82,6 +88,8 @@ export default function Navbar() {
     document.addEventListener('mousedown', handler)
     return () => document.removeEventListener('mousedown', handler)
   }, [])
+
+  const NAV_STRUCTURE = buildNav(t)
 
   function toggleMobileSection(label) {
     setMobileExpanded(prev => ({ ...prev, [label]: !prev[label] }))
@@ -148,12 +156,14 @@ export default function Navbar() {
             <span className={lang === 'en' ? 'text-neutral-900 dark:text-white' : ''}>EN</span>
           </button>
 
-          {/* Theme */}
-          <button onClick={() => setTheme(resolvedTheme === 'dark' ? 'light' : 'dark')}
-            className="hidden md:flex w-8 h-8 items-center justify-center text-neutral-400 hover:text-neutral-900 dark:hover:text-white transition text-sm"
-            aria-label="Tema">
-            {resolvedTheme === 'dark' ? '☀' : '◑'}
-          </button>
+          {/* Theme — renderizzato solo dopo mount per evitare hydration mismatch (BUG-6) */}
+          {mounted && (
+            <button onClick={() => setTheme(resolvedTheme === 'dark' ? 'light' : 'dark')}
+              className="hidden md:flex w-8 h-8 items-center justify-center text-neutral-400 hover:text-neutral-900 dark:hover:text-white transition text-sm"
+              aria-label="Tema">
+              {resolvedTheme === 'dark' ? '☀' : '◑'}
+            </button>
+          )}
 
           {/* User avatar / accedi */}
           {session?.user ? (

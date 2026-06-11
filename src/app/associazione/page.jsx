@@ -1,14 +1,13 @@
+import { prisma } from '@/lib/prisma'
+
 export const metadata = { title: 'Associazione — ASSUML' }
+export const dynamic = 'force-dynamic'
 
-const COMITATO = [
-  { ruolo: 'Presidente',           nome: 'Nome Cognome' },
-  { ruolo: 'Vicepresidente',       nome: 'Nome Cognome' },
-  { ruolo: 'Segretario/a',         nome: 'Nome Cognome' },
-  { ruolo: 'Responsabile Finanze', nome: 'Nome Cognome' },
-  { ruolo: 'Resp. Comunicazione',  nome: 'Nome Cognome' },
-]
+export default async function AssociazionePage() {
+  const committee = await prisma.committeeMember
+    .findMany({ where: { active: true }, orderBy: [{ order: 'asc' }, { createdAt: 'asc' }] })
+    .catch(() => [])
 
-export default function AssociazionePage() {
   return (
     <div className="max-w-6xl mx-auto px-6">
 
@@ -44,25 +43,43 @@ export default function AssociazionePage() {
         <div className="text-neutral-600 dark:text-neutral-300 text-sm leading-relaxed space-y-3">
           <p>Lo statuto ufficiale dell'associazione regola la governance, i diritti e i doveri dei soci.</p>
           <a
-            href="mailto:info@assuml.ch?subject=Richiesta%20Statuto"
+            href="/documents/statuto_AS_v151208_def.pdf"
+            target="_blank"
+            rel="noopener noreferrer"
             className="inline-block text-sm font-mono underline underline-offset-4 hover:text-[#00CFCF] transition"
           >
-            Richiedi copia dello statuto →
+            Leggi lo statuto (PDF) →
           </a>
         </div>
       </section>
 
       {/* Comitato */}
       <section className="py-16">
-        <h2 className="font-bold text-2xl tracking-tight text-neutral-900 dark:text-white mb-10">Comitato {new Date().getFullYear()}</h2>
-        <div className="divide-y divide-neutral-200 dark:divide-neutral-800">
-          {COMITATO.map(({ ruolo, nome }) => (
-            <div key={ruolo} className="py-5 flex items-center justify-between">
-              <span className="text-xs font-mono uppercase tracking-widest text-neutral-500 dark:text-neutral-500">{ruolo}</span>
-              <span className="text-sm font-semibold text-neutral-900 dark:text-white">{nome}</span>
-            </div>
-          ))}
-        </div>
+        <h2 className="font-bold text-2xl tracking-tight text-neutral-900 dark:text-white mb-10">
+          Comitato {new Date().getFullYear()}
+        </h2>
+        {committee.length === 0 ? (
+          <p className="text-sm font-mono text-neutral-400">Informazioni sul comitato in aggiornamento.</p>
+        ) : (
+          <div className="divide-y divide-neutral-200 dark:divide-neutral-800">
+            {committee.map(m => (
+              <div key={m.id} className="py-5 flex items-center justify-between">
+                <span className="text-xs font-mono uppercase tracking-widest text-neutral-500 dark:text-neutral-500">
+                  {m.role}
+                </span>
+                <div className="text-right">
+                  <span className="text-sm font-semibold text-neutral-900 dark:text-white block">{m.name}</span>
+                  {m.email && (
+                    <a href={`mailto:${m.email}`}
+                      className="text-[11px] font-mono text-neutral-400 hover:text-[#00CFCF] transition">
+                      {m.email}
+                    </a>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
       </section>
 
     </div>

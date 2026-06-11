@@ -23,25 +23,28 @@ export async function POST(req) {
   if (note.status !== 'APPROVED')  return NextResponse.json({ error: 'Nota non disponibile' }, { status: 403 })
   if (note.price === 0) {
     // Gratuita — crea acquisto diretto senza pagamento
+    // BUG-2 FIX: purchaseStatus:'ACTIVE' obbligatorio, altrimenti /view nega accesso
     await prisma.purchase.upsert({
       where:  { userId_noteId: { userId: session.user.id, noteId } },
-      update: {},
-      create: { userId: session.user.id, noteId, stripeId: `free_${Date.now()}`, amountPaid: 0, currency: note.currency },
+      update: { purchaseStatus: 'ACTIVE' },
+      create: { userId: session.user.id, noteId, stripeId: `free_${Date.now()}`, amountPaid: 0, currency: note.currency, purchaseStatus: 'ACTIVE' },
     })
     return NextResponse.json({ ok: true, redirect: `/appunti/${noteId}` })
   }
 
   // ── SIMULAZIONE DEV ────────────────────────────────────────────────────
   if (process.env.NODE_ENV === 'development') {
+    // BUG-2 FIX: purchaseStatus:'ACTIVE' obbligatorio, altrimenti /view nega accesso
     await prisma.purchase.upsert({
       where:  { userId_noteId: { userId: session.user.id, noteId } },
-      update: {},
+      update: { purchaseStatus: 'ACTIVE' },
       create: {
-        userId:     session.user.id,
+        userId:         session.user.id,
         noteId,
-        stripeId:   `sim_${Date.now()}`,
-        amountPaid: note.price,
-        currency:   note.currency,
+        stripeId:       `sim_${Date.now()}`,
+        amountPaid:     note.price,
+        currency:       note.currency,
+        purchaseStatus: 'ACTIVE',
       },
     })
     return NextResponse.json({

@@ -162,3 +162,34 @@ model Announcement {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
+
+// ── Guida Studente ────────────────────────────────────────────────────────
+model GuidaSection {
+  id        String   @id @default(cuid())
+  titolo    String
+  corpo     String   @db.Text
+  order     Int      @default(0)
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// ── Schede Progetti (CiSiamo, Ramificazioni, …) ───────────────────────────
+model Project {
+  id        String   @id @default(cuid())
+  slug      String   @unique   // 'cisiamo' | 'ramificazioni'
+  content   Json     @default("{}")
+  updatedAt DateTime @updatedAt
+}
+
+// ── Comitato ──────────────────────────────────────────────────────────────
+model CommitteeMember {
+  id        String   @id @default(cuid())
+  name      String
+  role      String
+  email     String?
+  order     Int      @default(0)
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}

@@ -21,10 +21,12 @@ export async function POST(req) {
     const userId = s.metadata?.userId
     if (noteId && userId) {
       const note = await prisma.note.findUnique({ where: { id: noteId }, select: { price: true, currency: true } })
+      // BUG-3 FIX: update e create devono settare purchaseStatus:'ACTIVE',
+      // altrimenti l'utente non può accedere alla nota dopo pagamento Stripe.
       await prisma.purchase.upsert({
         where:  { userId_noteId: { userId, noteId } },
-        update: {},
-        create: { userId, noteId, stripeId: s.id, amountPaid: note?.price ?? 0, currency: note?.currency ?? 'CHF' },
+        update: { purchaseStatus: 'ACTIVE', stripeId: s.id },
+        create: { userId, noteId, stripeId: s.id, amountPaid: note?.price ?? 0, currency: note?.currency ?? 'CHF', purchaseStatus: 'ACTIVE' },
       })
     }
   }

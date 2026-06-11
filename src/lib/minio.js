@@ -1,5 +1,5 @@
 // src/lib/minio.js
-import { S3Client, PutObjectCommand, GetObjectCommand } from '@aws-sdk/client-s3'
+import { S3Client, PutObjectCommand, GetObjectCommand, ListObjectsV2Command, DeleteObjectCommand } from '@aws-sdk/client-s3'
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner'
 
 export const BUCKET = () => process.env.MINIO_BUCKET ?? 'assuml-notes'
@@ -55,6 +55,21 @@ export async function presignedPut(key, contentType, expiresIn = 300) {
     { expiresIn }
   )
   return devRewriteUrl(url)
+}
+
+/** Lista oggetti nel bucket (max 1000) */
+export async function listObjects(prefix = '', maxKeys = 500) {
+  const cmd = new ListObjectsV2Command({
+    Bucket: BUCKET(),
+    Prefix: prefix,
+    MaxKeys: maxKeys,
+  })
+  const res = await getS3().send(cmd)
+  return (res.Contents ?? []).map(obj => ({
+    key:          obj.Key,
+    size:         obj.Size,
+    lastModified: obj.LastModified,
+  }))
 }
 
 /** Presigned GET — visualizzazione protetta (default 60s) */

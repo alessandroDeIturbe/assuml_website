@@ -7,8 +7,11 @@ export async function PATCH(req, { params }) {
   const session = await requireAdmin()
   if (session instanceof Response) return session
 
+  // BUG-10 FIX: params è una Promise in Next.js 15 — deve essere awaited
+  const { id } = await params
+
   const purchase = await prisma.purchase.update({
-    where: { id: params.id },
+    where: { id },
     data:  { purchaseStatus: 'ACTIVE' },
     select: { id: true, purchaseStatus: true, userId: true, noteId: true },
   })

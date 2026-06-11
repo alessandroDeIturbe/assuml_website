@@ -1,7 +1,15 @@
 {
   "nav": {
+    "chiSiamo": "Chi siamo",
+    "eventi": "Eventi",
+    "progetti": "Progetti",
+    "cisiamoPodcast": "CiSiamo Podcast",
+    "ramificazioni": "Ramificazioni",
+    "shop": "Shop",
+    "risorse": "Risorse",
     "appunti": "Appunti",
-    "cisiamo": "CiSiamo",
+    "convenzioni": "Convenzioni",
+    "guida": "Guida dello studente",
     "sostienici": "Sostienici",
     "contatti": "Contatti",
     "accedi": "Accedi",
@@ -32,17 +40,97 @@
     "visualizza": "Visualizza"
   },
   "notes": {
-    "buyBtn":   "Acquista",
-    "freeBtn":  "Ottieni gratis",
-    "viewBtn":  "Visualizza",
-    "deleteBtn":"Elimina",
-    "purchased":"Già acquistato",
-    "simNote":  "[DEV] Acquisto simulato"
+    "buyBtn": "Acquista",
+    "freeBtn": "Ottieni gratis",
+    "viewBtn": "Visualizza",
+    "deleteBtn": "Elimina",
+    "purchased": "Già acquistato",
+    "simNote": "[DEV] Acquisto simulato"
   },
   "common": {
-    "loading":  "Caricamento…",
-    "error":    "Errore",
-    "save":     "Salva",
-    "cancel":   "Annulla"
+    "loading": "Caricamento…",
+    "error": "Errore",
+    "save": "Salva",
+    "cancel": "Annulla",
+    "edit": "Modifica"
+  },
+  "podcast": {
+    "hubLabel": "Hub Multimediale · ASSUML",
+    "title1": "CiSIamo",
+    "title2": "Podcast",
+    "subtitle": "Voci, suoni e storie dal Conservatorio della Svizzera Italiana. Interviste, live electronics, esperienze Erasmus e festival partner.",
+    "spotifyBtn": "Ascolta su Spotify",
+    "youtubeBtn": "Guarda su YouTube",
+    "projectLabel": "Il progetto",
+    "whoTitle": "Chi siamo",
+    "whoPara1": "CiSiamo è il podcast dell'Associazione Studenti del Conservatorio della Svizzera Italiana. Ogni puntata esplora un aspetto della vita musicale, culturale e accademica del Conservatorio.",
+    "whoPara2": "Interviste ad artisti e docenti, reportage dai festival, approfondimenti sulle discipline e storie di chi vive la musica ogni giorno.",
+    "episodesLabel": "Ultimi episodi",
+    "episodesError": "Episodi non disponibili al momento — guardali su",
+    "partnersLabel": "Festival Partner",
+    "partners": [
+      {
+        "name": "Festival Ramificazioni",
+        "role": "Partner principale",
+        "href": "/ramificazioni"
+      },
+      {
+        "name": "Lugano Musica",
+        "role": "Festival partner",
+        "href": "#"
+      },
+      {
+        "name": "Ticino Musica",
+        "role": "Festival partner",
+        "href": "#"
+      },
+      {
+        "name": "Jazz Ascona",
+        "role": "Festival partner",
+        "href": "#"
+      }
+    ]
+  },
+  "ramificazioni": {
+    "label": "Coproduzione ASSUML · 2025 / 2026",
+    "title1": "Festival",
+    "title2": "Ramificazioni",
+    "edition": "Prima edizione · Lugano, autunno 2025",
+    "heroPara1": "Piattaforma per la musica contemporanea, l'elettroacustica e le arti sonore. Nata dal Conservatorio della Svizzera Italiana, aperta al mondo.",
+    "heroPara2": "Concerti, installazioni sonore, workshop e talk in diversi spazi di Lugano. Artisti internazionali, studenti del Conservatorio e collaborazioni con istituzioni partner.",
+    "contactBtn": "Contattaci → ramificazioni@assuml.ch",
+    "manifestoLabel": "Manifesto",
+    "manifestoTitle": "Suono\ncome\npensiero.",
+    "manifesto1": "Ramificazioni nasce dall'esigenza di creare uno spazio dove la musica nuova possa respirare, espandersi e contaminarsi. Un festival che non separa la composizione dalla performance, il processo dal risultato, la ricerca dalla comunicazione.",
+    "manifesto2": "Ogni edizione è una mappa di connessioni: tra linguaggi, tra generazioni, tra luoghi. Il Ticino come crocevia sonoro d'Europa.",
+    "programLabel": "Prima edizione — Autunno 2025",
+    "partnersLabel": "Festival partner",
+    "events": [
+      {
+        "titolo": "Concerti di apertura",
+        "desc": "Serate inaugurali con ensemble e solisti del Conservatorio e artisti ospiti internazionali.",
+        "luogo": "Sala Kursaal, Lugano"
+      },
+      {
+        "titolo": "Installazioni sonore",
+        "desc": "Opere site-specific distribuite in diversi spazi della città, accessibili liberamente al pubblico.",
+        "luogo": "Spazi urbani, Lugano"
+      },
+      {
+        "titolo": "Workshop: Composizione in tempo reale",
+        "desc": "Sessioni aperte di composizione e improvvisazione con artisti residenti.",
+        "luogo": "Conservatorio CSI"
+      },
+      {
+        "titolo": "Talk: Musica e tecnologia",
+        "desc": "Conversazioni con compositori, ingegneri del suono e ricercatori sul futuro della musica.",
+        "luogo": "LAC Lugano Arte e Cultura"
+      }
+    ],
+    "festivalPartners": [
+      "Lugano Musica",
+      "Ticino Musica",
+      "Jazz Ascona"
+    ]
   }
 }

@@ -1,6 +1,10 @@
-export const metadata = { title: 'Guida per lo Studente — ASSUML' }
+import { prisma } from '@/lib/prisma'
 
-const SEZIONI = [
+export const metadata = { title: 'Guida per lo Studente — ASSUML' }
+export const dynamic = 'force-dynamic'
+
+// Fallback statico se il DB è vuoto (pre-seeding)
+const SEZIONI_DEFAULT = [
   {
     titolo: '1. Iscrizione e immatricolazione',
     corpo: `Per iscriversi al Conservatorio della Svizzera Italiana è necessario superare un esame di ammissione.
@@ -39,7 +43,13 @@ Emergenze: 112 (Europa) / 117 (Polizia CH) / 144 (Ambulanza CH)`,
   },
 ]
 
-export default function GuidaPage() {
+export default async function GuidaPage() {
+  const dbSections = await prisma.guidaSection
+    .findMany({ where: { active: true }, orderBy: [{ order: 'asc' }, { createdAt: 'asc' }] })
+    .catch(() => [])
+
+  const sezioni = dbSections.length > 0 ? dbSections : SEZIONI_DEFAULT
+
   return (
     <div className="max-w-4xl mx-auto px-6">
 
@@ -54,11 +64,13 @@ export default function GuidaPage() {
       </section>
 
       <section className="py-16 space-y-0 divide-y divide-neutral-200 dark:divide-neutral-800">
-        {SEZIONI.map(({ titolo, corpo }) => (
-          <div key={titolo} className="py-10 grid md:grid-cols-[280px_1fr] gap-8">
-            <h2 className="font-bold text-base text-neutral-900 dark:text-white leading-tight">{titolo}</h2>
+        {sezioni.map((s) => (
+          <div key={s.titolo ?? s.id} className="py-10 grid md:grid-cols-[280px_1fr] gap-8">
+            <h2 className="font-bold text-base text-neutral-900 dark:text-white leading-tight">
+              {s.titolo}
+            </h2>
             <div className="text-neutral-600 dark:text-neutral-300 text-sm leading-relaxed whitespace-pre-line">
-              {corpo}
+              {s.corpo}
             </div>
           </div>
         ))}

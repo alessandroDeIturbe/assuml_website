@@ -1,53 +1,16 @@
 'use client'
-import { useEffect, useState } from 'react'
+import { useState, useEffect } from 'react'
+import Link                    from 'next/link'
+import { useSession }          from 'next-auth/react'
+import { useLang }             from '@/contexts/LanguageContext'
 
 const SPOTIFY_URL = 'https://open.spotify.com/show/67aZjwavqo0YFM4he8NE4i'
 const YOUTUBE_URL = 'https://www.youtube.com/@CiSIamoPodcast'
-const YT_RSS      = 'https://www.youtube.com/feeds/videos.xml?user=CiSIamoPodcast'
+const ADMIN_EMAIL = 'studenti@conservatorio.ch'
 
-// Episodi reali di fallback (aggiornare periodicamente con gli ID video YouTube reali)
-const FALLBACK_EPISODES = [
-  {
-    id: 'UCxxxxxx_ep1',  // sostituire con videoId reale
-    title: 'CiSiamo Podcast — Trailer & Presentazione',
-    date:  '2024',
-    num:   '01',
-    thumb: 'https://i.ytimg.com/vi/dQw4w9WgXcQ/mqdefault.jpg', // placeholder — sostituire con thumb reale
-    url:   'https://www.youtube.com/@CiSIamoPodcast',
-    spotifyUrl: SPOTIFY_URL,
-  },
-  {
-    id: 'UCxxxxxx_ep2',
-    title: 'Elettroacustica e Spazio Sonoro — con Prof. M. Arndt',
-    date:  '2024',
-    num:   '02',
-    thumb: 'https://i.ytimg.com/vi/dQw4w9WgXcQ/mqdefault.jpg',
-    url:   'https://www.youtube.com/@CiSIamoPodcast',
-    spotifyUrl: SPOTIFY_URL,
-  },
-  {
-    id: 'UCxxxxxx_ep3',
-    title: 'Festival Ramificazioni 2024 — Dietro le quinte',
-    date:  '2024',
-    num:   '03',
-    thumb: 'https://i.ytimg.com/vi/dQw4w9WgXcQ/mqdefault.jpg',
-    url:   'https://www.youtube.com/@CiSIamoPodcast',
-    spotifyUrl: SPOTIFY_URL,
-  },
-  {
-    id: 'UCxxxxxx_ep4',
-    title: 'Erasmus a Berlino: un anno al KHB — con Anna Crivelli',
-    date:  '2024',
-    num:   '04',
-    thumb: 'https://i.ytimg.com/vi/dQw4w9WgXcQ/mqdefault.jpg',
-    url:   'https://www.youtube.com/@CiSIamoPodcast',
-    spotifyUrl: SPOTIFY_URL,
-  },
-]
-
-const TAG_COLORS = {
-  default: '#2DD4BF',
-}
+const RSS_PROXY =
+  'https://api.allorigins.win/get?url=' +
+  encodeURIComponent('https://www.youtube.com/feeds/videos.xml?user=CiSIamoPodcast')
 
 function IconSpotify() {
   return (
@@ -64,167 +27,189 @@ function IconYouTube() {
   )
 }
 
-function parseRSS(xmlText) {
+function parseRSS(xmlString) {
   try {
-    const parser = new DOMParser()
-    const doc    = parser.parseFromString(xmlText, 'application/xml')
-    const entries = Array.from(doc.querySelectorAll('entry')).slice(0, 8)
-    return entries.map((e, i) => {
-      const videoId  = e.querySelector('videoId')?.textContent ?? ''
-      const thumb    = videoId ? `https://i.ytimg.com/vi/${videoId}/mqdefault.jpg` : null
-      const pubDate  = e.querySelector('published')?.textContent ?? ''
-      const date     = pubDate ? new Date(pubDate).toLocaleDateString('it-IT', { year:'numeric', month:'short', day:'numeric' }) : ''
-      return {
-        id:       videoId || String(i),
-        title:    e.querySelector('title')?.textContent ?? 'Episodio',
-        videoId,
-        thumb,
-        date,
-        url:      `https://www.youtube.com/watch?v=${videoId}`,
-        num:      String(entries.length - i).padStart(2, '0'),
-      }
+    const doc   = new DOMParser().parseFromString(xmlString, 'text/xml')
+    const entries = Array.from(doc.querySelectorAll('entry'))
+    return entries.slice(0, 8).map(entry => {
+      const id      = entry.querySelector('id')?.textContent ?? ''
+      const videoId = id.split(':').pop()
+      const title   = entry.querySelector('title')?.textContent ?? '—'
+      const published = entry.querySelector('published')?.textContent?.slice(0, 10) ?? ''
+      const thumb   = entry.querySelector('thumbnail')?.getAttribute('url')
+                   ?? `https://i.ytimg.com/vi/${videoId}/mqdefault.jpg`
+      return { videoId, title, published, thumb, url: `https://www.youtube.com/watch?v=${videoId}` }
     })
   } catch { return [] }
 }
 
 export default function CisiamoPage() {
+  const { data: session }       = useSession()
+  const { t }                   = useLang()
   const [episodes, setEpisodes] = useState([])
-  const [loading,  setLoading]  = useState(true)
+  const [rssStatus, setRssStatus] = useState('loading') // loading | ok | error
+  const [dbContent, setDbContent] = useState({})
+  const isAdmin = session?.user?.email === ADMIN_EMAIL || session?.user?.isAdmin
+
+  // Merge: DB sovrascrive i18n se presente
+  const g = (key) => dbContent[key] || t(`podcast.${key}`)
+  const partners = Array.isArray(dbContent.partners) ? dbContent.partners : t('podcast.partners')
 
   useEffect(() => {
-    // Proxy via allorigins per evitare CORS sul client
-    const rssUrl = encodeURIComponent(YT_RSS)
-    fetch(`https://api.allorigins.win/get?url=${rssUrl}`)
+    fetch('/api/admin/projects/cisiamo').then(r => r.ok ? r.json() : {}).then(setDbContent).catch(() => {})
+  }, [])
+
+  useEffect(() => {
+    let cancelled = false
+    fetch(RSS_PROXY)
       .then(r => r.json())
-      .then(data => {
-        const parsed = parseRSS(data.contents ?? '')
-        setEpisodes(parsed)
+      .then(({ contents }) => {
+        if (cancelled) return
+        const items = parseRSS(contents ?? '')
+        setEpisodes(items)
+        setRssStatus(items.length ? 'ok' : 'error')
       })
-      .catch(() => setEpisodes(FALLBACK_EPISODES))
-      .finally(() => setLoading(false))
+      .catch(() => { if (!cancelled) setRssStatus('error') })
+    return () => { cancelled = true }
   }, [])
 
   return (
-    <div
-      className="-mt-14 pt-14 min-h-screen text-white"
-      style={{ background: 'linear-gradient(160deg, #160F24 0%, #0E1A18 60%, #121212 100%)' }}
-    >
+    <div className="-mt-14 pt-14 min-h-screen transition-colors duration-300
+      bg-gradient-to-br from-purple-100 via-blue-100 to-emerald-100
+      dark:from-purple-950 dark:via-slate-950 dark:to-emerald-950
+      text-indigo-950 dark:text-white">
+
       <div className="max-w-6xl mx-auto px-6">
 
-        {/* Header */}
-        <section className="py-20" style={{ borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
-          <p className="text-xs font-mono uppercase tracking-widest mb-8" style={{ color: '#D4AF37' }}>
-            Hub Multimediale · ASSUML
+        {/* ── Header ─────────────────────────────────────────────────── */}
+        <section className="py-20 relative border-b border-indigo-950/10 dark:border-white/[0.08]">
+
+          {isAdmin && (
+            <Link href="/admin/projects/cisiamo"
+              className="absolute top-6 right-0 flex items-center gap-1.5 px-3 py-1.5 text-xs font-mono
+                border border-indigo-950/20 dark:border-white/20
+                text-indigo-950/60 dark:text-white/50
+                hover:text-indigo-950 dark:hover:text-white
+                hover:border-indigo-950/50 dark:hover:border-white/50
+                transition">
+              ✏ {t('common.edit')}
+            </Link>
+          )}
+
+          <p className="text-xs font-mono uppercase tracking-widest mb-8 text-amber-600 dark:text-amber-400">
+            {t('podcast.hubLabel')}
           </p>
-          {/* Logo CiSiamo — dimensioni generose */}
-          <div className="mb-8">
-            <img
-              src="/imgs/logos/logo_cisiamo.png"
-              alt="CiSiamo Podcast"
-              className="w-48 md:w-64 h-auto object-contain"
-              onError={e => { e.currentTarget.style.display = 'none' }}
-            />
-          </div>
-          <h1 className="font-black leading-none tracking-tight" style={{ fontSize: 'clamp(3rem,9vw,6.5rem)' }}>
-            CiSiamo<br />
-            <span style={{ background: 'linear-gradient(90deg,#6D28D9,#2DD4BF)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>
-              Podcast
+
+          {/* Logo sopra al titolo — colori nativi, no filtri */}
+          <img
+            src="/imgs/logos/logo_cisiamo.png"
+            alt="CiSiamo Podcast"
+            className="w-full max-w-[clamp(20rem,45vw,35rem)] md:max-w-[38rem] h-auto object-contain mb-8 mx-auto md:mx-0"
+            onError={e => { e.currentTarget.style.display = 'none' }}
+          />
+
+          {/* "CiSIamo" solido · "Podcast" gradiente viola→smeraldo */}
+          <h1 className="font-black leading-none tracking-tight text-slate-950 dark:text-white mb-6"
+            style={{ fontSize: 'clamp(3rem,9vw,6.5rem)' }}>
+            {t('podcast.title1')}<br />
+            <span className="bg-clip-text text-transparent bg-gradient-to-r from-purple-600 to-teal-400 dark:from-purple-500 dark:to-teal-400">
+              {t('podcast.title2')}
             </span>
           </h1>
-          <p className="mt-6 text-base max-w-xl leading-relaxed" style={{ color: 'rgba(255,255,255,0.5)' }}>
-            Voci, suoni e storie dal Conservatorio della Svizzera Italiana.
-            Interviste, live electronics, Erasmus e festival partner.
+
+          <p className="text-base max-w-xl leading-relaxed mb-10 text-indigo-950/60 dark:text-white/60">
+            {g('subtitle')}
           </p>
-          <div className="flex flex-wrap gap-3 mt-10">
+
+          <div className="flex flex-wrap gap-3">
             <a href={SPOTIFY_URL} target="_blank" rel="noopener noreferrer"
               className="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-semibold hover:opacity-80 transition"
               style={{ background: '#1DB954', color: '#000' }}>
-              <IconSpotify /> Ascolta su Spotify
+              <IconSpotify /> {t('podcast.spotifyBtn')}
             </a>
             <a href={YOUTUBE_URL} target="_blank" rel="noopener noreferrer"
               className="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-semibold hover:opacity-80 transition"
               style={{ background: '#FF0000', color: '#fff' }}>
-              <IconYouTube /> Guarda su YouTube
+              <IconYouTube /> {t('podcast.youtubeBtn')}
             </a>
           </div>
         </section>
 
-        {/* Episodi */}
-        <section className="py-16">
-          <h2 className="text-xs font-mono uppercase tracking-widest mb-10" style={{ color: 'rgba(255,255,255,0.35)' }}>
-            Ultimi episodi
-          </h2>
+        {/* ── Ultimi episodi (YouTube RSS) ───────────────────────────── */}
+        <section className="py-16 border-b border-indigo-950/10 dark:border-white/[0.08]">
+          <p className="text-[10px] font-mono uppercase tracking-widest mb-10 text-indigo-950/60 dark:text-white/60">
+            {t('podcast.episodesLabel')}
+          </p>
 
-          {loading && (
-            <p className="text-sm font-mono" style={{ color: 'rgba(255,255,255,0.3)' }}>Caricamento episodi…</p>
+          {rssStatus === 'loading' && (
+            <p className="text-sm text-indigo-950/40 dark:text-white/40 font-mono">{t('common.loading')}</p>
           )}
-
-          {!loading && episodes.length === 0 && (
-            <p className="text-sm font-mono" style={{ color: 'rgba(255,255,255,0.3)' }}>
-              Feed non disponibile. <a href={YOUTUBE_URL} target="_blank" rel="noopener noreferrer" className="underline" style={{ color: '#2DD4BF' }}>Visita il canale YouTube →</a>
+          {rssStatus === 'error' && (
+            <p className="text-sm text-indigo-950/40 dark:text-white/40 font-mono">
+              {t('podcast.episodesError')}
+              {' '}<a href={YOUTUBE_URL} target="_blank" rel="noopener noreferrer"
+                className="underline underline-offset-4 hover:text-indigo-950 dark:hover:text-white transition">
+                YouTube →
+              </a>
             </p>
           )}
+          {rssStatus === 'ok' && (
+            <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              {episodes.map(ep => (
+                <a key={ep.videoId} href={ep.url} target="_blank" rel="noopener noreferrer"
+                  className="group block overflow-hidden transition hover:opacity-90">
+                  <div className="relative aspect-video overflow-hidden bg-indigo-950/10 dark:bg-white/[0.06]">
+                    <img src={ep.thumb} alt={ep.title} className="w-full h-full object-cover group-hover:scale-105 transition duration-300" loading="lazy" />
+                    {/* Play overlay */}
+                    <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition bg-black/40">
+                      <svg viewBox="0 0 24 24" className="w-10 h-10 text-white" fill="currentColor">
+                        <path d="M8 5v14l11-7z"/>
+                      </svg>
+                    </div>
+                  </div>
+                  <div className="pt-3 pb-1">
+                    <p className="text-xs font-mono text-indigo-950/40 dark:text-white/40 mb-1">{ep.published}</p>
+                    <p className="text-sm font-semibold leading-snug line-clamp-2 text-indigo-950 dark:text-white">{ep.title}</p>
+                  </div>
+                </a>
+              ))}
+            </div>
+          )}
+        </section>
 
-          <div style={{ borderTop: '1px solid rgba(255,255,255,0.08)' }}>
-            {episodes.map((ep) => (
-              <a
-                key={ep.id}
-                href={ep.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="py-6 flex items-center justify-between gap-6 group transition block"
-                style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}
-              >
-                <div className="flex items-start gap-5">
-                  {/* Thumbnail */}
-                  <div className="shrink-0 w-16 h-12 rounded overflow-hidden" style={{ background: 'linear-gradient(135deg,#6D28D9,#2DD4BF)' }}>
-                    {ep.thumb && (
-                      <img src={ep.thumb} alt={ep.title} className="w-full h-full object-cover" />
-                    )}
-                  </div>
-                  <div className="space-y-1">
-                    <p className="font-semibold text-base text-white leading-tight group-hover:opacity-70 transition line-clamp-2">
-                      {ep.title}
-                    </p>
-                    <p className="text-xs font-mono" style={{ color: 'rgba(255,255,255,0.4)' }}>{ep.date}</p>
-                  </div>
-                </div>
-                <div className="shrink-0 flex items-center gap-3">
-                  <span className="opacity-40 group-hover:opacity-100 transition" style={{ color: '#FF0000' }}>
-                    <IconYouTube />
-                  </span>
-                  <span className="w-8 h-8 rounded-full border flex items-center justify-center text-xs"
-                    style={{ borderColor: 'rgba(255,255,255,0.15)', color: 'rgba(255,255,255,0.5)' }}>
-                    ▶
-                  </span>
-                </div>
-              </a>
-            ))}
+        {/* ── Chi siamo ──────────────────────────────────────────────── */}
+        <section className="py-16 border-b border-indigo-950/10 dark:border-white/[0.08]">
+          <div className="grid md:grid-cols-[1fr_2fr] gap-12">
+            <div>
+              <p className="text-[10px] font-mono uppercase tracking-[0.3em] mb-3 text-indigo-950/60 dark:text-white/60">
+                {t('podcast.projectLabel')}
+              </p>
+              <h2 className="font-black text-3xl leading-tight text-indigo-950 dark:text-white">
+                {t('podcast.whoTitle')}
+              </h2>
+            </div>
+            <div className="space-y-4 text-base leading-relaxed text-indigo-950/60 dark:text-white/60">
+              <p>{g('whoPara1')}</p>
+              <p>{g('whoPara2')}</p>
+            </div>
           </div>
         </section>
 
-        {/* Festival partner */}
-        <section className="py-16" style={{ borderTop: '1px solid rgba(255,255,255,0.08)' }}>
-          <h2 className="text-xs font-mono uppercase tracking-widest mb-10" style={{ color: 'rgba(255,255,255,0.35)' }}>
-            Festival Partner
-          </h2>
-          <div className="grid sm:grid-cols-2 gap-px" style={{ background: 'rgba(255,255,255,0.06)' }}>
-            {[
-              { name: 'Festival Ramificazioni', role: 'Partner principale', href: '/ramificazioni' },
-              { name: 'Lugano Musica',           role: 'Festival partner',  href: '#' },
-              { name: 'Ticino Musica',           role: 'Festival partner',  href: '#' },
-              { name: 'Jazz Ascona',             role: 'Festival partner',  href: '#' },
-            ].map(({ name, role, href }) => (
-              <a key={name} href={href}
-                className="p-8 transition block group"
-                style={{ background: '#160F24' }}
-                onMouseEnter={e => e.currentTarget.style.background='rgba(109,40,217,0.08)'}
-                onMouseLeave={e => e.currentTarget.style.background='#160F24'}
-              >
-                <span className="inline-block w-1.5 h-1.5 rounded-full mb-4" style={{ background: '#D4AF37' }} />
-                <p className="font-semibold text-base text-white">{name}</p>
-                <p className="text-xs font-mono mt-1" style={{ color: 'rgba(255,255,255,0.35)' }}>{role}</p>
-              </a>
+        {/* ── Festival partner ───────────────────────────────────────── */}
+        <section className="py-16">
+          <p className="text-[10px] font-mono uppercase tracking-widest mb-10 text-indigo-950/60 dark:text-white/60">
+            {t('podcast.partnersLabel')}
+          </p>
+          <div className="grid sm:grid-cols-2 gap-px bg-indigo-950/10 dark:bg-white/[0.08]">
+            {Array.isArray(partners) && partners.map(({ name, role, href }) => (
+              <Link key={name} href={href}
+                className="p-8 block transition
+                  bg-white/65 dark:bg-white/[0.04]
+                  hover:bg-white/80 dark:hover:bg-white/[0.07]">
+                <span className="inline-block w-1.5 h-1.5 rounded-full mb-4 bg-amber-500" />
+                <p className="font-semibold text-base text-indigo-950 dark:text-white">{name}</p>
+                <p className="text-xs font-mono mt-1 text-indigo-950/60 dark:text-white/60">{role}</p>
+              </Link>
             ))}
           </div>
         </section>

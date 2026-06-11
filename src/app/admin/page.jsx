@@ -12,7 +12,7 @@ export default async function AdminPage() {
   const session = await auth()
   if (!session?.user || session.user.email !== ADMIN_EMAIL) redirect('/')
 
-  const [notes, announcements, pendingPurchases] = await Promise.all([
+  const [notes, announcements, pendingPurchases, events, convenzioni, committee] = await Promise.all([
     prisma.note.findMany({
       where:   { status: 'PENDING_APPROVAL' },
       orderBy: { createdAt: 'desc' },
@@ -26,6 +26,7 @@ export default async function AdminPage() {
       orderBy: { createdAt: 'desc' },
       select:  { id: true, title: true, body: true, createdAt: true },
     }),
+    // BUG-1 FIX: purchases_q deve essere al posto [2], non events_q
     prisma.purchase.findMany({
       where:   { purchaseStatus: 'PENDING_APPROVAL' },
       orderBy: { purchasedAt: 'desc' },
@@ -35,6 +36,9 @@ export default async function AdminPage() {
         note: { select: { title: true } },
       },
     }),
+    prisma.event.findMany({ where: { active: true }, orderBy: { date: 'asc' } }).catch(() => []),
+    prisma.convention.findMany({ where: { active: true }, orderBy: { createdAt: 'desc' } }).catch(() => []),
+    prisma.committeeMember.findMany({ where: { active: true }, orderBy: [{ order: 'asc' }, { createdAt: 'asc' }] }).catch(() => []),
   ])
 
   return (
@@ -49,7 +53,14 @@ export default async function AdminPage() {
         </p>
       </section>
       <div className="py-12">
-        <AdminClient initialNotes={notes} initialAnnouncements={announcements} initialPurchases={pendingPurchases} />
+        <AdminClient
+          initialNotes={notes}
+          initialAnnouncements={announcements}
+          initialPurchases={pendingPurchases}
+          initialEvents={events}
+          initialConvenzioni={convenzioni}
+          initialCommittee={committee}
+        />
       </div>
     </div>
   )

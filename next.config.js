@@ -1,8 +1,9 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   serverExternalPackages: ['@prisma/client', 'bcryptjs'],
+  // pdfjs-dist è ESM-only — va transpilato dal bundler di Next.js
+  transpilePackages: ['pdfjs-dist'],
   images: {
-    // Immagini locali in /public non richiedono remotePatterns ma serve unoptimized: false (default)
     remotePatterns: [
       { protocol: 'https', hostname: 'lh3.googleusercontent.com' },
       { protocol: 'https', hostname: 'lh1.googleusercontent.com' },
@@ -16,7 +17,8 @@ const nextConfig = {
       { protocol: 'http',  hostname: 'localhost' },
     ],
   },
-  // Sopprime i warning di Next.js 14 sul campo `version` obsoleto in docker-compose
   experimental: {},
+  // Silenzia il warning Cross-Origin in dev (accesso da altri device sulla stessa rete)
+  allowedDevOrigins: ['10.21.1.190', '10.21.*', '192.168.*', '172.*'],
 }
 module.exports = nextConfig

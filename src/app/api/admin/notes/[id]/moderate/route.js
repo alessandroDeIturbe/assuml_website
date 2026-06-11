@@ -15,7 +15,7 @@ export async function PATCH(req, { params }) {
   const session = await requireAdmin()
   if (session instanceof Response) return session
 
-  const { id: noteId } = params
+  const { id: noteId } = await params
 
   // 2. Parse body
   let body
